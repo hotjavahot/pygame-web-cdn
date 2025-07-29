@@ -3,121 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Pygame-web CDN</title>
+    <title>TERMINAL ACCESS - CLASSIFIED</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Courier New', monospace;
             background: #000;
             color: #00ff41;
-            padding: 20px;
-            text-align: center;
+            overflow: hidden;
+            cursor: none;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
+        
+        .terminal {
+            width: 100vw;
+            height: 100vh;
+            padding: 20px;
+            background: #000;
             border: 2px solid #00ff41;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px #00ff41;
+            box-shadow: 0 0 20px #00ff41, inset 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative;
         }
-        .file-list {
-            text-align: left;
-            margin: 20px 0;
-        }
-        a {
+        
+        .header {
             color: #00ff41;
-            text-decoration: none;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #00ff41;
+            padding-bottom: 10px;
+            font-size: clamp(8px, 1.5vw, 16px);
+            line-height: 1.2;
+            overflow-x: auto;
         }
-        a:hover {
+        
+        .ascii-art {
+            white-space: pre;
+            font-size: clamp(6px, 1.2vw, 12px);
+            line-height: 1;
+        }
+        
+        .header-info {
+            font-size: clamp(10px, 2vw, 14px);
+            margin-top: 10px;
+        }
+        
+        .output {
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            height: calc(100vh - 120px);
+        }
+        
+        .prompt {
+            color: #ff4141;
+            text-shadow: 0 0 5px #ff4141;
+        }
+        
+        .command {
+            color: #00ff41;
             text-shadow: 0 0 5px #00ff41;
         }
-        .url-box {
-            background: #1a1a1a;
-            border: 1px solid #00ff41;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-family: monospace;
-            text-align: left;
+        
+        .success {
+            color: #41ff41;
+            text-shadow: 0 0 5px #41ff41;
         }
-        .status {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 5px;
+        
+        .warning {
+            color: #ffff00;
+            text-shadow: 0 0 5px #ffff00;
         }
-        .online { background: #00ff41; }
-        .offline { background: #ff4141; }
+        
+        .error {
+            color: #ff4141;
+            text-shadow: 0 0 5px #ff4141;
+        }
+        
+        .cursor {
+            background: #00ff41;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .glitch {
+            animation: glitch 0.3s;
+        }
+        
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, 1px); }
+            80% { transform: translate(1px, -1px); }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎮 Custom Pygame-web CDN</h1>
-        <p>Self-hosted pygame-web assets from pygbag_archive_09.tar</p>
-        
-        <div class="file-list">
-            <h3>📁 Available Files:</h3>
-            <ul id="file-list">
-                <li><span class="status" id="pythons-status"></span><a href="archives/0.9.1/pythons.js">pythons.js</a> - Main pygame-web loader</li>
-                <li><span class="status" id="browserfs-status"></span><a href="archives/0.9.1/browserfs.min.js">browserfs.min.js</a> - Browser filesystem</li>
-                <li><span class="status" id="empty-status"></span><a href="archives/0.9.1/empty.html">empty.html</a> - Empty iframe page</li>
-                <li><span class="status" id="main-status"></span><a href="archives/0.9.1/cpython312/main.js">cpython312/main.js</a> - Python interpreter</li>
-                <li><span class="status" id="vtx-status"></span><a href="archives/0.9.1/vtx.js">vtx.js</a> - Terminal support</li>
-                <li><span class="status" id="vt-status"></span><a href="archives/0.9.1/vt/xterm.js">vt/</a> - Terminal assets</li>
-            </ul>
+    <div class="terminal">
+        <div class="scanlines"></div>
+        <div class="header">
+            <div class="ascii-art">██████╗ ██╗      █████╗  ██████╗██╗  ██╗██╗  ██╗ █████╗ ████████╗
+██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██║  ██║██╔══██╗╚══██╔══╝
+██████╔╝██║     ███████║██║     █████╔╝ ███████║███████║   ██║   
+██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██╔══██║██╔══██║   ██║   
+██████╔╝███████╗██║  ██║╚██████╗██║  ██╗██║  ██║██║  ██║   ██║   
+╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝</div>
+            
+            <div class="header-info">SECURE TERMINAL v3.7.2 | CLEARANCE LEVEL: ████████ | STATUS: ACTIVE
+            WARNING: UNAUTHORIZED ACCESS IS PROHIBITED</div>
         </div>
-        
-        <h3>🔧 Usage:</h3>
-        <p>Replace the original CDN URL with your own:</p>
-        <div class="url-box">
-            <strong>Before:</strong><br>
-            https://pygame-web.github.io/archives/0.9/
-        </div>
-        <div class="url-box">
-            <strong>After:</strong><br>
-            https://YOUR_USERNAME.github.io/pygame-web-cdn/archives/0.9.1/
-        </div>
-        
-        <h3>📊 Benefits:</h3>
-        <ul style="text-align: left;">
-            <li>✅ No dependency on external CDN uptime</li>
-            <li>✅ Potentially faster loading</li>
-            <li>✅ Full control over file versions</li>
-            <li>✅ No third-party tracking</li>
-            <li>✅ Free hosting via GitHub Pages</li>
-        </ul>
+        <div class="output" id="output"></div>
     </div>
 
     <script>
-        // Test file availability
-        const files = [
-            { id: 'pythons-status', url: 'archives/0.9.1/pythons.js' },
-            { id: 'browserfs-status', url: 'archives/0.9.1/browserfs.min.js' },
-            { id: 'empty-status', url: 'archives/0.9.1/empty.html' },
-            { id: 'main-status', url: 'archives/0.9.1/cpython312/main.js' },
-            { id: 'vtx-status', url: 'archives/0.9.1/vtx.js' },
-            { id: 'vt-status', url: 'archives/0.9.1/vt/xterm.js' }
+        const output = document.getElementById('output');
+        let currentIndex = 0;
+        
+        const commands = [
+            { text: 'root@blackhat:~# ', class: 'prompt', delay: 100 },
+            { text: 'whoami\n', class: 'command', delay: 80 },
+            { text: 'root\n\n', class: 'success', delay: 200 },
+            
+            { text: 'root@blackhat:~# ', class: 'prompt', delay: 150 },
+            { text: 'nmap -sS -O 192.168.1.0/24\n', class: 'command', delay: 100 },
+            { text: 'Starting Nmap 7.94 scan...\n', class: 'success', delay: 300 },
+            { text: 'Host is up (0.00045s latency).\n', class: 'success', delay: 200 },
+            { text: 'PORT     STATE SERVICE\n', class: 'success', delay: 100 },
+            { text: '22/tcp   open  ssh\n', class: 'success', delay: 150 },
+            { text: '80/tcp   open  http\n', class: 'success', delay: 150 },
+            { text: '443/tcp  open  https\n', class: 'success', delay: 150 },
+            { text: '3389/tcp open  ms-wbt-server\n\n', class: 'success', delay: 200 },
+            
+            { text: 'root@blackhat:~# ', class: 'prompt', delay: 200 },
+            { text: 'sqlmap -u "http://target.com/login.php" --dbs\n', class: 'command', delay: 120 },
+            { text: '[WARNING] potential SQL injection found!\n', class: 'warning', delay: 400 },
+            { text: 'available databases [3]:\n', class: 'success', delay: 300 },
+            { text: '[*] information_schema\n', class: 'success', delay: 150 },
+            { text: '[*] users_db\n', class: 'success', delay: 150 },
+            { text: '[*] financial_records\n\n', class: 'success', delay: 200 },
+            
+            { text: 'root@blackhat:~# ', class: 'prompt', delay: 250 },
+            { text: 'hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://192.168.1.100\n', class: 'command', delay: 140 },
+            { text: 'Hydra v9.5 starting at 2025-07-29 23:47:12\n', class: 'success', delay: 300 },
+            { text: '[22][ssh] host: 192.168.1.100   login: admin   password: password123\n', class: 'success', delay: 800 },
+            { text: '1 of 1 target successfully completed, 1 valid password found\n\n', class: 'success', delay: 200 },
+            
+            { text: 'root@blackhat:~# ', class: 'prompt', delay: 200 },
+            { text: 'ssh admin@192.168.1.100\n', class: 'command', delay: 100 },
+            { text: 'admin@192.168.1.100\'s password: ', class: 'success', delay: 300 },
+            { text: '********\n', class: 'success', delay: 400 },
+            { text: 'Welcome to Ubuntu 20.04.6 LTS\n', class: 'success', delay: 200 },
+            { text: 'Last login: Mon Jul 29 18:23:01 2025\n\n', class: 'success', delay: 200 },
+            
+            { text: 'admin@target:~$ ', class: 'prompt', delay: 300 },
+            { text: 'sudo -l\n', class: 'command', delay: 80 },
+            { text: 'User admin may run the following commands:\n', class: 'success', delay: 200 },
+            { text: '    (ALL : ALL) ALL\n\n', class: 'success', delay: 200 },
+            
+            { text: 'admin@target:~$ ', class: 'prompt', delay: 250 },
+            { text: 'sudo su\n', class: 'command', delay: 100 },
+            { text: 'root@target:/home/admin# ', class: 'error', delay: 300 },
+            { text: 'find / -name "*.key" -o -name "*.pem" 2>/dev/null\n', class: 'command', delay: 140 },
+            { text: '/etc/ssl/private/server.key\n', class: 'success', delay: 400 },
+            { text: '/home/admin/.ssh/id_rsa\n', class: 'success', delay: 300 },
+            { text: '/var/backups/database_backup.key\n\n', class: 'success', delay: 300 },
+            
+            { text: 'root@target:/home/admin# ', class: 'error', delay: 200 },
+            { text: 'cat /etc/shadow | grep "\\$"\n', class: 'command', delay: 120 },
+            { text: 'root:$6$randomsalt$hashedpassword...\n', class: 'success', delay: 400 },
+            { text: 'admin:$6$anothersalt$anotherhashedpass...\n', class: 'success', delay: 300 },
+            { text: 'database:$6$dbsalt$dbhashedpassword...\n\n', class: 'success', delay: 300 },
+            
+            { text: 'root@target:/home/admin# ', class: 'error', delay: 250 },
+            { text: 'nc -lvnp 4444 &\n', class: 'command', delay: 100 },
+            { text: 'listening on [any] 4444 ...\n', class: 'success', delay: 300 },
+            { text: '[1] 2847\n\n', class: 'success', delay: 200 },
+            
+            { text: 'root@target:/home/admin# ', class: 'error', delay: 200 },
+            { text: 'python3 -c "import os; os.system(\'rm -rf --no-preserve-root /\')"\n', class: 'command', delay: 160 },
+            { text: '[CRITICAL ERROR] SYSTEM DESTRUCTION INITIATED\n', class: 'error', delay: 600 },
+            { text: 'rm: cannot remove \'/\': Operation not permitted\n', class: 'error', delay: 400 },
+            { text: 'FAILSAFE ACTIVATED - TERMINATING CONNECTION\n\n', class: 'error', delay: 500 },
+            
+            { text: 'Connection to 192.168.1.100 closed.\n', class: 'warning', delay: 300 },
+            { text: 'root@blackhat:~# ', class: 'prompt', delay: 400 },
+            { text: 'echo "MISSION ACCOMPLISHED"\n', class: 'command', delay: 100 },
+            { text: 'MISSION ACCOMPLISHED\n\n', class: 'success', delay: 300 },
+            
+            { text: 'root@blackhat:~# ', class: 'prompt', delay: 200 },
+            { text: 'history -c && exit\n', class: 'command', delay: 120 },
+            { text: 'logout\n\n', class: 'success', delay: 300 },
+            
+            { text: 'TERMINAL SESSION ENDED\n', class: 'error', delay: 500 },
+            { text: 'TRACES CLEARED\n', class: 'success', delay: 300 },
+            { text: 'SYSTEM SECURE\n\n', class: 'success', delay: 400 }
         ];
         
-        files.forEach(file => {
-            fetch(file.url, { method: 'HEAD' })
-                .then(response => {
-                    const status = document.getElementById(file.id);
-                    if (response.ok) {
-                        status.className = 'status online';
-                        status.title = '✅ Available';
-                    } else {
-                        status.className = 'status offline';
-                        status.title = '❌ Missing';
-                    }
-                })
-                .catch(() => {
-                    const status = document.getElementById(file.id);
-                    status.className = 'status offline';
-                    status.title = '❌ Error';
-                });
+        function typeCommand() {
+            if (currentIndex < commands.length) {
+                const cmd = commands[currentIndex];
+                
+                // Add glitch effect occasionally
+                if (Math.random() < 0.1) {
+                    output.classList.add('glitch');
+                    setTimeout(() => output.classList.remove('glitch'), 300);
+                }
+                
+                // Type character by character for commands
+                if (cmd.class === 'command') {
+                    typeCharByChar(cmd.text, cmd.class, cmd.delay);
+                } else {
+                    // Instant for prompts and output
+                    const span = document.createElement('span');
+                    span.className = cmd.class;
+                    span.textContent = cmd.text;
+                    output.appendChild(span);
+                    
+                    // Auto scroll
+                    output.scrollTop = output.scrollHeight;
+                    
+                    currentIndex++;
+                    setTimeout(typeCommand, cmd.delay);
+                }
+            } else {
+                // Restart the sequence
+                setTimeout(() => {
+                    output.innerHTML = '';
+                    currentIndex = 0;
+                    typeCommand();
+                }, 3000);
+            }
+        }
+        
+        function typeCharByChar(text, className, delay) {
+            const span = document.createElement('span');
+            span.className = className;
+            output.appendChild(span);
+            
+            let charIndex = 0;
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            cursor.textContent = '█';
+            span.appendChild(cursor);
+            
+            function typeChar() {
+                if (charIndex < text.length) {
+                    const char = text[charIndex];
+                    span.insertBefore(document.createTextNode(char), cursor);
+                    charIndex++;
+                    
+                    // Random typing speed
+                    const speed = Math.random() * 100 + 50;
+                    
+                    // Pause longer on certain characters
+                    const pauseChars = [' ', '-', '/', '.'];
+                    const pause = pauseChars.includes(char) ? speed * 2 : speed;
+                    
+                    setTimeout(typeChar, pause);
+                    
+                    // Auto scroll
+                    output.scrollTop = output.scrollHeight;
+                } else {
+                    cursor.remove();
+                    currentIndex++;
+                    setTimeout(typeCommand, delay);
+                }
+            }
+            
+            typeChar();
+        }
+        
+        // Start the terminal
+        typeCommand();
+        
+        // Add random screen flicker
+        setInterval(() => {
+            if (Math.random() < 0.02) {
+                document.body.style.filter = 'brightness(1.2) contrast(1.1)';
+                setTimeout(() => {
+                    document.body.style.filter = '';
+                }, 100);
+            }
+        }, 1000);
+        
+        // Easter egg - click to speed up
+        let speedMultiplier = 1;
+        document.addEventListener('click', () => {
+            speedMultiplier = speedMultiplier === 1 ? 3 : speedMultiplier === 3 ? 0.5 : 1;
         });
+        
+        // Prevent right-click context menu
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
     </script>
 </body>
 </html>
