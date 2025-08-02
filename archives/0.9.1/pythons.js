@@ -1,3 +1,112 @@
+// ===== COMPREHENSIVE AUDIO CONTEXT OVERRIDE =====
+(function() {
+    'use strict';
+    
+    // Store original console methods
+    const originalConsole = {
+        warn: console.warn,
+        log: console.log,
+        error: console.error,
+        info: console.info,
+        debug: console.debug
+    };
+    
+    // Silent console replacement
+    const silentConsole = {
+        warn: function() {},
+        log: function() {},
+        error: function() {},
+        info: function() {},
+        debug: function() {}
+    };
+    
+    // Function to silence console temporarily
+    function withSilentConsole(fn) {
+        // Replace console methods
+        Object.assign(console, silentConsole);
+        try {
+            return fn();
+        } finally {
+            // Restore console methods
+            Object.assign(console, originalConsole);
+        }
+    }
+    
+    // Override AudioContext constructor
+    if (typeof AudioContext !== 'undefined') {
+        const OriginalAudioContext = AudioContext;
+        window.AudioContext = function(...args) {
+            return withSilentConsole(() => new OriginalAudioContext(...args));
+        };
+        Object.setPrototypeOf(window.AudioContext, OriginalAudioContext);
+        window.AudioContext.prototype = OriginalAudioContext.prototype;
+    }
+    
+    // Override webkitAudioContext constructor
+    if (typeof webkitAudioContext !== 'undefined') {
+        const OriginalWebkitAudioContext = webkitAudioContext;
+        window.webkitAudioContext = function(...args) {
+            return withSilentConsole(() => new OriginalWebkitAudioContext(...args));
+        };
+        Object.setPrototypeOf(window.webkitAudioContext, OriginalWebkitAudioContext);
+        window.webkitAudioContext.prototype = OriginalWebkitAudioContext.prototype;
+    }
+    
+    // Override Audio constructor
+    if (typeof Audio !== 'undefined') {
+        const OriginalAudio = Audio;
+        window.Audio = function(...args) {
+            return withSilentConsole(() => new OriginalAudio(...args));
+        };
+        Object.setPrototypeOf(window.Audio, OriginalAudio);
+        window.Audio.prototype = OriginalAudio.prototype;
+    }
+    
+    // Override createScriptProcessor on both existing and future audio contexts
+    function overrideCreateScriptProcessor(contextClass) {
+        if (!contextClass || !contextClass.prototype) return;
+        
+        const originalCreateScriptProcessor = contextClass.prototype.createScriptProcessor;
+        if (originalCreateScriptProcessor) {
+            contextClass.prototype.createScriptProcessor = function(...args) {
+                return withSilentConsole(() => originalCreateScriptProcessor.apply(this, args));
+            };
+        }
+        
+        // Also override createJavaScriptNode (legacy)
+        const originalCreateJavaScriptNode = contextClass.prototype.createJavaScriptNode;
+        if (originalCreateJavaScriptNode) {
+            contextClass.prototype.createJavaScriptNode = function(...args) {
+                return withSilentConsole(() => originalCreateJavaScriptNode.apply(this, args));
+            };
+        }
+    }
+    
+    // Apply to existing AudioContext classes
+    if (typeof AudioContext !== 'undefined') {
+        overrideCreateScriptProcessor(AudioContext);
+    }
+    if (typeof webkitAudioContext !== 'undefined') {
+        overrideCreateScriptProcessor(webkitAudioContext);
+    }
+    
+    // Watch for dynamically created audio contexts
+    const originalDefineProperty = Object.defineProperty;
+    Object.defineProperty = function(obj, prop, descriptor) {
+        const result = originalDefineProperty.call(this, obj, prop, descriptor);
+        
+        // If someone defines AudioContext or webkitAudioContext, override it
+        if ((prop === 'AudioContext' || prop === 'webkitAudioContext') && obj === window) {
+            setTimeout(() => overrideCreateScriptProcessor(obj[prop]), 0);
+        }
+        
+        return result;
+    };
+    
+    console.log('🔇 Comprehensive audio warning suppression activated');
+})();
+
+// ===== END COMPREHENSIVE AUDIO OVERRIDE =====
 "use strict";
 
 /*  BF2 is still broken see  https://github.com/jvilk/BrowserFS/issues/325
