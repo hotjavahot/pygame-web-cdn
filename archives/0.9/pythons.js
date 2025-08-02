@@ -1172,7 +1172,33 @@ function feat_lifecycle() {
 }
 
 
+// PATCH FOR feat_snd function in pythons.js
+// Replace the feat_snd function with this version:
+
 function feat_snd() {
+    // ===== ADD AUDIO CONTEXT OVERRIDE BEFORE ANYTHING ELSE =====
+    if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        
+        if (AudioContextClass && AudioContextClass.prototype && AudioContextClass.prototype.createScriptProcessor) {
+            const originalCreateScriptProcessor = AudioContextClass.prototype.createScriptProcessor;
+            
+            AudioContextClass.prototype.createScriptProcessor = function() {
+                // Completely silence console during this call
+                const savedWarn = console.warn;
+                console.warn = function() {}; // Silent
+                
+                try {
+                    const result = originalCreateScriptProcessor.apply(this, arguments);
+                    return result;
+                } finally {
+                    console.warn = savedWarn; // Restore
+                }
+            };
+        }
+    }
+    // ===== END AUDIO CONTEXT OVERRIDE =====
+    
     // to set user media engagement status and possibly make it blocking
     MM.UME = !vm.config.ume_block
     MM.is_safari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
